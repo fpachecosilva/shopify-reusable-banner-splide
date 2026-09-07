@@ -17,8 +17,8 @@
 
 <reusable-banner
   id="ReusableBanner-{{ section.id }}"
-  class="reusable-banner reusable-banner-splide splide reusable-banner--{{ section.settings.layout }} reusable-banner--height-{{ section.settings.slide_height }}{% if section.settings.show_text_below %} reusable-banner--mobile-text-below{% endif %}"
-  style="--rb-max-width: {{ section.settings.max_width }}px; --rb-custom-height: {{ section.settings.custom_height }}px;"
+  class="reusable-banner reusable-banner-splide splide reusable-banner--{{ section.settings.layout }} reusable-banner--height-{{ section.settings.slide_height }}{% if section.settings.show_text_below %} reusable-banner--mobile-text-below{% endif %}{% if section.settings.hide_navigation_on_mobile %} reusable-banner--hide-navigation-mobile{% endif %}{% if section.settings.arrows_position == 'overlay' %} reusable-banner--arrows-overlay{% endif %}{% unless section.settings.arrow_circular_background %} reusable-banner--arrows-plain{% endunless %}"
+  style="--rb-custom-height: {{ section.settings.custom_height }}px; --rb-arrow-color: {{ section.settings.arrow_color }}; --rb-arrow-background: {{ section.settings.arrow_background_color }}; --rb-autoplay-color: {{ section.settings.autoplay_control_color }}; --rb-autoplay-background: {{ section.settings.autoplay_control_background_color }}; --rb-counter-color: {{ section.settings.counter_color }}; --rb-counter-background: {{ section.settings.counter_background_color }};"
   role="region"
   aria-roledescription="{{ 'Carrossel' }}"
   aria-label="{{ section.settings.accessibility_label | escape }}"
@@ -206,7 +206,7 @@
   </div>
 
   {%- if slide_total_count > 1 -%}
-    <div class="reusable-banner__controls" data-reusable-banner-controls>
+    <div class="reusable-banner__controls reusable-banner__controls--{{ section.settings.arrows_position }}" data-reusable-banner-controls>
       {%- if section.settings.show_arrows -%}
         <button type="button" class="reusable-banner__arrow reusable-banner__arrow--previous" data-reusable-banner-previous aria-label="{{ 'Slide anterior' }}" aria-controls="ReusableBannerTrack-{{ section.id }}">
           <span aria-hidden="true">‹</span>
@@ -265,16 +265,6 @@
         { "value": "contained", "label": "Contido" }
       ],
       "default": "full_bleed"
-    },
-    {
-      "type": "range",
-      "id": "max_width",
-      "min": 800,
-      "max": 2400,
-      "step": 20,
-      "unit": "px",
-      "label": "Largura máxima",
-      "default": 1440
     },
     {
       "type": "select",
@@ -354,6 +344,58 @@
       "default": true
     },
     {
+      "type": "select",
+      "id": "arrows_position",
+      "label": "Posição das setas",
+      "options": [
+        { "value": "below", "label": "Abaixo do banner" },
+        { "value": "overlay", "label": "Sobre o banner" }
+      ],
+      "default": "below"
+    },
+    {
+      "type": "checkbox",
+      "id": "arrow_circular_background",
+      "label": "Exibir fundo circular nas setas",
+      "default": true
+    },
+    {
+      "type": "color",
+      "id": "arrow_color",
+      "label": "Cor das setas",
+      "default": "#111111"
+    },
+    {
+      "type": "color",
+      "id": "arrow_background_color",
+      "label": "Cor do fundo das setas",
+      "default": "#FFFFFF"
+    },
+    {
+      "type": "color",
+      "id": "autoplay_control_color",
+      "label": "Cor do controle de reprodução",
+      "default": "#111111"
+    },
+    {
+      "type": "color",
+      "id": "autoplay_control_background_color",
+      "label": "Cor do fundo do controle de reprodução",
+      "default": "#FFFFFF"
+    },
+    {
+      "type": "color",
+      "id": "counter_color",
+      "label": "Cor do contador",
+      "default": "#111111"
+    },
+    {
+      "type": "color",
+      "id": "counter_background_color",
+      "label": "Cor do fundo do contador",
+      "default": "#FFFFFF"
+    },
+    {
       "type": "checkbox",
       "id": "show_autoplay_control",
       "label": "Exibir controle de reprodução e pausa",
@@ -376,6 +418,13 @@
       "id": "show_text_below",
       "label": "Exibir texto abaixo da mídia no mobile",
       "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "hide_navigation_on_mobile",
+      "label": "Ocultar pontos, números ou contador no mobile",
+      "info": "Oculta a navegação no mobile, independentemente da posição do texto.",
+      "default": false
     },
     {
       "type": "header",
@@ -769,7 +818,7 @@
   ],
   "presets": [
     {
-      "name": "Banner reutilizável",
+      "name": "Carrossel de Banners",
       "blocks": [
         { "type": "slide" },
         { "type": "slide" }
@@ -778,5 +827,3 @@
   ]
 }
 {% endschema %}
-
-

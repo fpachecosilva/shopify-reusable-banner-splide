@@ -16,7 +16,7 @@ assets/reusable-banner-splide.js
 assets/reusable-banner-splide.css
 ```
 
-Depois adicione **Carrossel de banners reutilizável** pelo editor visual. A seção já carrega os quatro assets na ordem correta.
+Depois adicione **Carrossel de banners** pelo editor visual. A seção já carrega os quatro assets na ordem correta.
 
 ## Recursos
 

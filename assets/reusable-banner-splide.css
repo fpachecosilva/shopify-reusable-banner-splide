@@ -2,14 +2,16 @@ reusable-banner {
     --rb-focus: #1f5fcc;
     --rb-control-bg: rgba(255, 255, 255, 0.94);
     --rb-control-text: #111111;
+    position: relative;
     display: block;
-    max-width: var(--rb-max-width);
+    width: 100%;
+    max-width: 100%;
     margin-inline: auto;
     color: #111111;
   }
 
   reusable-banner.reusable-banner--full_bleed {
-    max-width: none;
+    max-width: 100%;
   }
 
   .reusable-banner__viewport {
@@ -287,6 +289,7 @@ reusable-banner {
   }
 
   .reusable-banner__controls {
+    position: relative;
     display: flex;
     min-height: 3rem;
     align-items: center;
@@ -315,6 +318,53 @@ reusable-banner {
   .reusable-banner__arrow {
     font-size: 1.5rem;
     line-height: 1;
+    color: var(--rb-arrow-color, var(--rb-control-text));
+    background: var(--rb-arrow-background, var(--rb-control-bg));
+    border-color: transparent;
+  }
+
+  .reusable-banner--arrows-plain .reusable-banner__arrow {
+    background: transparent;
+    border-color: transparent;
+    border-radius: 0;
+  }
+
+  .reusable-banner--arrows-overlay .reusable-banner__controls {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    grid-template-rows: 1fr auto;
+    min-height: 0;
+    padding: 1rem;
+    pointer-events: none;
+  }
+
+  .reusable-banner--arrows-overlay .reusable-banner__controls > * {
+    pointer-events: auto;
+  }
+
+  .reusable-banner--arrows-overlay .reusable-banner__arrow--previous {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .reusable-banner--arrows-overlay .reusable-banner__arrow--next {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  .reusable-banner--arrows-overlay .reusable-banner__navigation {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: center;
+  }
+
+  .reusable-banner--arrows-overlay .reusable-banner__autoplay {
+    grid-column: 3;
+    grid-row: 2;
+    justify-self: end;
   }
 
   .reusable-banner__arrow:disabled {
@@ -328,6 +378,32 @@ reusable-banner {
     align-items: center;
     justify-content: center;
     gap: 0.35rem;
+  }
+
+  .reusable-banner__navigation--counter {
+    min-height: 0;
+    padding: 0;
+    color: var(--rb-counter-color, var(--rb-control-text));
+    background: transparent;
+    border-radius: 0;
+  }
+
+  .reusable-banner__navigation--dots .reusable-banner__dot {
+    background: var(--rb-counter-background, var(--rb-control-bg));
+  }
+
+  .reusable-banner__navigation--dots .reusable-banner__dot[aria-current="true"] {
+    background: var(--rb-counter-color, var(--rb-control-text));
+  }
+
+  .reusable-banner__navigation--numbers .reusable-banner__dot--number {
+    color: var(--rb-counter-color, var(--rb-control-text));
+    background: transparent;
+  }
+
+  .reusable-banner__navigation--numbers .reusable-banner__dot--number[aria-current="true"] {
+    color: var(--rb-counter-color, var(--rb-control-text));
+    background: var(--rb-counter-background, var(--rb-control-bg));
   }
 
   .reusable-banner__navigation--dots,
@@ -370,6 +446,8 @@ reusable-banner {
 
   .reusable-banner__autoplay {
     font-size: 0.85rem;
+    color: var(--rb-autoplay-color, var(--rb-control-text));
+    background: var(--rb-autoplay-background, var(--rb-control-bg));
   }
 
   .reusable-banner__visually-hidden {
@@ -445,6 +523,10 @@ reusable-banner {
     .reusable-banner__content-wrapper {
       padding: 1rem;
     }
+
+    .reusable-banner--hide-navigation-mobile .reusable-banner__navigation {
+      display: none;
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -479,4 +561,3 @@ reusable-banner {
 .reusable-banner-splide .splide__pagination {
   display: none;
 }
-
