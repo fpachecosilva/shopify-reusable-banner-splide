@@ -1,0 +1,782 @@
+{{ 'splide.min.css' | asset_url | stylesheet_tag }}
+{{ 'reusable-banner-splide.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'splide.min.js' | asset_url }}" defer></script>
+<script src="{{ 'reusable-banner-splide.js' | asset_url }}" defer></script>
+
+{%- liquid
+  assign weekday_names = 'sunday,monday,tuesday,wednesday,thursday,friday,saturday' | split: ','
+  assign today_index = 'now' | date: '%w' | plus: 0
+  assign today_key = 'recurring_' | append: weekday_names[today_index]
+  assign schedule_test_active = false
+  if request.design_mode and section.settings.schedule_test_enabled and section.settings.schedule_test_datetime != blank
+    assign schedule_test_active = true
+  endif
+
+  assign slide_total_count = section.blocks.size
+-%}
+
+<reusable-banner
+  id="ReusableBanner-{{ section.id }}"
+  class="reusable-banner reusable-banner-splide splide reusable-banner--{{ section.settings.layout }} reusable-banner--height-{{ section.settings.slide_height }}{% if section.settings.show_text_below %} reusable-banner--mobile-text-below{% endif %}"
+  style="--rb-max-width: {{ section.settings.max_width }}px; --rb-custom-height: {{ section.settings.custom_height }}px;"
+  role="region"
+  aria-roledescription="{{ 'Carrossel' }}"
+  aria-label="{{ section.settings.accessibility_label | escape }}"
+  tabindex="0"
+  data-reusable-banner
+  data-reusable-banner-splide
+  data-auto-rotate="{{ section.settings.auto_rotate }}"
+  data-speed="{{ section.settings.change_slides_speed | times: 1000 }}"
+  data-loop="{{ section.settings.loop }}"
+  data-pause-on-hover="{{ section.settings.pause_on_hover }}"
+  data-pause-on-focus="{{ section.settings.pause_on_focus }}"
+  data-splide-transition="{{ section.settings.transition }}"
+  data-translation-of="{{ 'de' | escape }}"
+  data-schedule-time-zone="{{ section.settings.schedule_time_zone | escape }}"
+  {% if schedule_test_active %}data-schedule-test-now="{{ section.settings.schedule_test_datetime | escape }}"{% endif %}
+>
+  <div class="reusable-banner__viewport splide__track">
+    <ul
+      class="reusable-banner__track splide__list"
+      id="ReusableBannerTrack-{{ section.id }}"
+      data-reusable-banner-track
+      aria-live="{% if section.settings.auto_rotate %}off{% else %}polite{% endif %}"
+      aria-atomic="true"
+    >
+      {%- assign priority_slide_rendered = false -%}
+      {%- for block in section.blocks -%}
+        {%- assign server_inactive = false -%}
+        {%- if schedule_test_active == false and block.settings.recurring_enabled and block.settings.recurring_start_at == blank and block.settings.recurring_end_at == blank -%}
+          {%- unless block.settings[today_key] -%}
+            {%- assign server_inactive = true -%}
+          {%- endunless -%}
+        {%- endif -%}
+        {%- assign slide_image = block.settings.image | default: block.settings.image_mobile -%}
+        {%- assign slide_ratio = 2.4 -%}
+        {%- if slide_image != blank and slide_image.aspect_ratio != blank -%}
+          {%- assign slide_ratio = slide_image.aspect_ratio -%}
+        {%- endif -%}
+        {%- assign slide_alt_fallback = 'Imagem do banner' -%}
+        {%- assign slide_alt = block.settings.image_alt | default: slide_image.alt | default: block.settings.heading | default: slide_alt_fallback -%}
+        {%- assign slide_heading_label = block.settings.heading | strip_html | strip -%}
+        {%- assign banner_link = block.settings.banner_link -%}
+        {%- if banner_link contains 'shopify://' -%}
+          {%- assign banner_link = banner_link | remove: 'shopify://' | prepend: '/' -%}
+        {%- endif -%}
+        {%- assign banner_link_label = block.settings.banner_link_label | default: 'Abrir banner' -%}
+        {%- assign video_title = slide_heading_label | default: banner_link_label -%}
+        {%- assign video_source = '' -%}
+        {%- if block.settings.video_url != blank -%}
+          {%- if block.settings.video_url.type == 'youtube' -%}
+            {%- capture video_source -%}https://www.youtube.com/embed/{{ block.settings.video_url.id }}?playsinline=1&rel=0{% if block.settings.video_autoplay %}&autoplay=1&mute=1{% endif %}{% if block.settings.video_loop %}&loop=1&playlist={{ block.settings.video_url.id }}{% endif %}{%- endcapture -%}
+          {%- elsif block.settings.video_url.type == 'vimeo' -%}
+            {%- capture video_source -%}https://player.vimeo.com/video/{{ block.settings.video_url.id }}?playsinline=1{% if block.settings.video_autoplay %}&autoplay=1&muted=1{% endif %}{% if block.settings.video_loop %}&loop=1{% endif %}{%- endcapture -%}
+          {%- endif -%}
+        {%- endif -%}
+        {%- assign is_priority_slide = false -%}
+        {%- unless server_inactive -%}
+          {%- unless priority_slide_rendered -%}
+            {%- assign is_priority_slide = true -%}
+            {%- assign priority_slide_rendered = true -%}
+          {%- endunless -%}
+        {%- endunless -%}
+
+        <li
+          class="splide__slide reusable-banner__slide"
+          id="ReusableBannerSlide-{{ section.id }}-{{ forloop.index }}"
+          data-reusable-banner-slide
+          data-slide-index="{{ forloop.index0 }}"
+          {% if block.settings.recurring_enabled %}
+            data-recurring-enabled="true"
+            data-recurring-days="{% if block.settings.recurring_sunday %}0,{% endif %}{% if block.settings.recurring_monday %}1,{% endif %}{% if block.settings.recurring_tuesday %}2,{% endif %}{% if block.settings.recurring_wednesday %}3,{% endif %}{% if block.settings.recurring_thursday %}4,{% endif %}{% if block.settings.recurring_friday %}5,{% endif %}{% if block.settings.recurring_saturday %}6{% endif %}"
+            data-recurring-start-time="{{ block.settings.recurring_start_time | escape }}"
+            data-recurring-end-time="{{ block.settings.recurring_end_time | escape }}"
+            data-recurring-start-at="{{ block.settings.recurring_start_at | escape }}"
+            data-recurring-end-at="{{ block.settings.recurring_end_at | escape }}"
+          {% elsif block.settings.schedule_enabled %}
+            data-schedule-enabled="true"
+            data-schedule-start="{{ block.settings.schedule_start | escape }}"
+            data-schedule-end="{{ block.settings.schedule_end | escape }}"
+          {% endif %}
+          {% if server_inactive %}hidden{% endif %}
+          style="--rb-media-ratio: {{ slide_ratio }}; --rb-overlay-opacity: {{ block.settings.image_overlay_opacity | divided_by: 100.0 }}; --rb-image-position: {{ block.settings.image_position }};"
+          {{ block.shopify_attributes }}
+          role="group"
+          aria-roledescription="{{ 'Slide' }}"
+          aria-label="{{ forloop.index }} {{ 'de' }} {{ slide_total_count }}"
+          tabindex="-1"
+        >
+          {%- if banner_link != blank -%}
+            <a
+              class="reusable-banner__media-link"
+              href="{{ banner_link | escape }}"
+              aria-label="{{ banner_link_label | escape }}"
+              {% if block.settings.open_links_new_tab %}target="_blank" rel="noopener noreferrer"{% endif %}
+            >
+          {%- endif -%}
+          <div class="reusable-banner__media reusable-banner__media--{{ block.settings.image_fit }}">
+            {%- if block.settings.media_type == 'shopify_video' and block.settings.video != blank -%}
+              <div class="reusable-banner__video" aria-label="{{ video_title | escape }}">
+                {{ block.settings.video | video_tag: autoplay: block.settings.video_autoplay, loop: block.settings.video_loop, muted: true, controls: false, loading: 'lazy' }}
+              </div>
+            {%- elsif block.settings.media_type == 'external_video' and video_source != blank -%}
+              <iframe
+                class="reusable-banner__external-video"
+                src="{{ video_source | strip | escape }}"
+                title="{{ video_title | escape }}"
+                loading="lazy"
+                allow="autoplay; fullscreen; picture-in-picture"
+                allowfullscreen
+              ></iframe>
+            {%- elsif slide_image != blank -%}
+              <picture>
+                {%- if block.settings.image_mobile != blank -%}
+                  <source
+                    media="(max-width: 749px)"
+                    srcset="{{ block.settings.image_mobile | image_url: width: 375 }} 375w, {{ block.settings.image_mobile | image_url: width: 550 }} 550w, {{ block.settings.image_mobile | image_url: width: 750 }} 750w, {{ block.settings.image_mobile | image_url: width: 1100 }} 1100w"
+                    sizes="100vw"
+                  >
+                {%- endif -%}
+                <img
+                  srcset="
+                    {%- assign slide_widths = '480,750,990,1200,1440,1800,2400,3000,3840' | split: ',' -%}
+                    {%- for slide_width in slide_widths -%}
+                      {%- assign slide_width_number = slide_width | plus: 0 -%}
+                      {%- if slide_image.width >= slide_width_number -%}
+                        {{ slide_image | image_url: width: slide_width_number }} {{ slide_width_number }}w,
+                      {%- endif -%}
+                    {%- endfor -%}
+                    {{ slide_image | image_url }} {{ slide_image.width }}w
+                  "
+                  src="{{ slide_image | image_url: width: 3840 }}"
+                  width="{{ slide_image.width }}"
+                  height="{{ slide_image.height }}"
+                  sizes="100vw"
+                  alt="{{ slide_alt | strip_html | escape }}"
+                  {% if is_priority_slide %}fetchpriority="high" loading="eager"{% else %}loading="lazy"{% endif %}
+                >
+              </picture>
+            {%- else -%}
+              <div class="reusable-banner__placeholder" aria-hidden="true">{{ 'hero-apparel-1' | placeholder_svg_tag }}</div>
+            {%- endif -%}
+          </div>
+          {%- if banner_link != blank -%}</a>{%- endif -%}
+
+          {%- if block.settings.eyebrow != blank or block.settings.heading != blank or block.settings.subheading != blank or block.settings.button_label != blank or block.settings.second_button_label != blank -%}
+            <div class="reusable-banner__content-wrapper reusable-banner__content-wrapper--{{ block.settings.box_align }}">
+              <div
+                class="reusable-banner__content{% unless block.settings.show_text_box %} reusable-banner__content--transparent{% endunless %}"
+                style="--rb-content-color: {{ block.settings.content_text_color }}; --rb-content-bg: {{ block.settings.content_background_color }}; --rb-content-radius: {{ block.settings.content_radius }}px; --rb-button-bg: {{ block.settings.button_color }}; --rb-button-text: {{ block.settings.button_text_color }};"
+              >
+                {%- if block.settings.eyebrow != blank -%}
+                  <p class="reusable-banner__eyebrow">{{ block.settings.eyebrow | escape }}</p>
+                {%- endif -%}
+                {%- if block.settings.heading != blank -%}
+                  {%- if block.settings.heading_tag == 'h1' -%}<h1 class="reusable-banner__heading reusable-banner__heading--{{ block.settings.heading_size }}">{{ block.settings.heading }}</h1>{%- endif -%}
+                  {%- if block.settings.heading_tag == 'h2' -%}<h2 class="reusable-banner__heading reusable-banner__heading--{{ block.settings.heading_size }}">{{ block.settings.heading }}</h2>{%- endif -%}
+                  {%- if block.settings.heading_tag == 'h3' -%}<h3 class="reusable-banner__heading reusable-banner__heading--{{ block.settings.heading_size }}">{{ block.settings.heading }}</h3>{%- endif -%}
+                {%- endif -%}
+                {%- if block.settings.subheading != blank -%}
+                  <div class="reusable-banner__subheading rte">{{ block.settings.subheading }}</div>
+                {%- endif -%}
+                {%- if block.settings.button_label != blank or block.settings.second_button_label != blank -%}
+                  <div class="reusable-banner__buttons">
+                    {%- if block.settings.button_label != blank -%}
+                      <a
+                        class="reusable-banner__button reusable-banner__button--{{ block.settings.button_style }}"
+                        {% if block.settings.link != blank %}href="{{ block.settings.link }}"{% else %}role="link" aria-disabled="true"{% endif %}
+                        {% if block.settings.open_links_new_tab and block.settings.link != blank %}target="_blank" rel="noopener noreferrer"{% endif %}
+                      >{{ block.settings.button_label | escape }}</a>
+                    {%- endif -%}
+                    {%- if block.settings.second_button_label != blank -%}
+                      <a
+                        class="reusable-banner__button reusable-banner__button--{{ block.settings.second_button_style }}"
+                        {% if block.settings.second_link != blank %}href="{{ block.settings.second_link }}"{% else %}role="link" aria-disabled="true"{% endif %}
+                        {% if block.settings.open_links_new_tab and block.settings.second_link != blank %}target="_blank" rel="noopener noreferrer"{% endif %}
+                      >{{ block.settings.second_button_label | escape }}</a>
+                    {%- endif -%}
+                  </div>
+                {%- endif -%}
+              </div>
+            </div>
+          {%- endif -%}
+        </li>
+      {%- endfor -%}
+    </ul>
+  </div>
+
+  {%- if slide_total_count > 1 -%}
+    <div class="reusable-banner__controls" data-reusable-banner-controls>
+      {%- if section.settings.show_arrows -%}
+        <button type="button" class="reusable-banner__arrow reusable-banner__arrow--previous" data-reusable-banner-previous aria-label="{{ 'Slide anterior' }}" aria-controls="ReusableBannerTrack-{{ section.id }}">
+          <span aria-hidden="true">‹</span>
+        </button>
+      {%- endif -%}
+      {%- if section.settings.navigation_style != 'none' -%}
+        <div class="reusable-banner__navigation reusable-banner__navigation--{{ section.settings.navigation_style }}" data-reusable-banner-navigation>
+          {%- if section.settings.navigation_style == 'counter' -%}
+            <span data-reusable-banner-current>1</span><span aria-hidden="true"> / </span><span data-reusable-banner-total>{{ slide_total_count }}</span>
+            <span class="reusable-banner__visually-hidden">{{ 'de' }}</span>
+          {%- else -%}
+            {%- assign visible_counter = 0 -%}
+            {%- for block in section.blocks -%}
+              {%- assign server_inactive = false -%}
+              {%- if schedule_test_active == false and block.settings.recurring_enabled and block.settings.recurring_start_at == blank and block.settings.recurring_end_at == blank -%}
+                {%- unless block.settings[today_key] -%}{%- assign server_inactive = true -%}{%- endunless -%}
+              {%- endif -%}
+              {%- assign visible_counter = visible_counter | plus: 1 -%}
+              <button type="button" class="reusable-banner__dot{% if section.settings.navigation_style == 'numbers' %} reusable-banner__dot--number{% endif %}" data-reusable-banner-control data-slide-index="{{ forloop.index0 }}"{% if server_inactive %} hidden{% endif %} aria-label="{{ 'Ir para o slide' }} {{ visible_counter }} {{ 'de' }} {{ slide_total_count }}" aria-controls="ReusableBannerTrack-{{ section.id }}">{% if section.settings.navigation_style == 'numbers' %}{{ visible_counter }}{% else %}<span aria-hidden="true"></span>{% endif %}</button>
+            {%- endfor -%}
+          {%- endif -%}
+        </div>
+      {%- endif -%}
+      {%- if section.settings.show_arrows -%}
+        <button type="button" class="reusable-banner__arrow reusable-banner__arrow--next" data-reusable-banner-next aria-label="{{ 'Próximo slide' }}" aria-controls="ReusableBannerTrack-{{ section.id }}">
+          <span aria-hidden="true">›</span>
+        </button>
+      {%- endif -%}
+      {%- if section.settings.auto_rotate and section.settings.show_autoplay_control -%}
+        <button type="button" class="reusable-banner__autoplay" data-reusable-banner-autoplay data-label-pause="{{ 'Pausar carrossel' }}" data-label-play="{{ 'Reproduzir carrossel' }}" aria-label="{{ 'Pausar carrossel' }}" aria-controls="ReusableBannerTrack-{{ section.id }}">
+          <span data-reusable-banner-pause-icon aria-hidden="true">Ⅱ</span>
+          <span data-reusable-banner-play-icon aria-hidden="true" hidden>▶</span>
+          <span class="reusable-banner__visually-hidden" data-reusable-banner-autoplay-label>{{ 'Pausar carrossel' }}</span>
+        </button>
+      {%- endif -%}
+    </div>
+  {%- endif -%}
+</reusable-banner>
+
+{% schema %}
+{
+  "name": "Carrossel de banners",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Geral"
+    },
+    {
+      "type": "select",
+      "id": "layout",
+      "label": "Layout",
+      "options": [
+        { "value": "full_bleed", "label": "Largura total" },
+        { "value": "contained", "label": "Contido" }
+      ],
+      "default": "full_bleed"
+    },
+    {
+      "type": "range",
+      "id": "max_width",
+      "min": 800,
+      "max": 2400,
+      "step": 20,
+      "unit": "px",
+      "label": "Largura máxima",
+      "default": 1440
+    },
+    {
+      "type": "select",
+      "id": "slide_height",
+      "label": "Altura do slide",
+      "options": [
+        { "value": "adapt_image", "label": "Adaptar à imagem" },
+        { "value": "small", "label": "Pequeno" },
+        { "value": "medium", "label": "Médio" },
+        { "value": "large", "label": "Grande" },
+        { "value": "custom", "label": "Personalizado" }
+      ],
+      "default": "adapt_image"
+    },
+    {
+      "type": "range",
+      "id": "custom_height",
+      "min": 240,
+      "max": 900,
+      "step": 10,
+      "unit": "px",
+      "label": "Altura personalizada",
+      "default": 480
+    },
+    {
+      "type": "select",
+      "id": "transition",
+      "label": "Transição",
+      "options": [
+        { "value": "slide", "label": "Deslizar" },
+        { "value": "fade", "label": "Esmaecer" }
+      ],
+      "default": "slide"
+    },
+    {
+      "type": "header",
+      "content": "Controles"
+    },
+    {
+      "type": "checkbox",
+      "id": "auto_rotate",
+      "label": "Alternar slides automaticamente",
+      "default": false
+    },
+    {
+      "type": "range",
+      "id": "change_slides_speed",
+      "min": 3,
+      "max": 15,
+      "step": 1,
+      "unit": "s",
+      "label": "Trocar slides a cada",
+      "default": 5
+    },
+    {
+      "type": "checkbox",
+      "id": "loop",
+      "label": "Repetir slides em loop",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "pause_on_hover",
+      "label": "Pausar ao passar o mouse",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "pause_on_focus",
+      "label": "Pausar ao receber foco",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_arrows",
+      "label": "Exibir setas anterior e próxima",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_autoplay_control",
+      "label": "Exibir controle de reprodução e pausa",
+      "default": true
+    },
+    {
+      "type": "select",
+      "id": "navigation_style",
+      "label": "Estilo da navegação",
+      "options": [
+        { "value": "dots", "label": "Pontos" },
+        { "value": "numbers", "label": "Números" },
+        { "value": "counter", "label": "Contador" },
+        { "value": "none", "label": "Nenhuma" }
+      ],
+      "default": "dots"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_text_below",
+      "label": "Exibir texto abaixo da mídia no mobile",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Programação"
+    },
+    {
+      "type": "text",
+      "id": "schedule_time_zone",
+      "label": "Fuso horário da programação",
+      "info": "Use um fuso IANA, como America/Sao_Paulo ou Europe/Lisbon.",
+      "default": "America/Sao_Paulo"
+    },
+    {
+      "type": "checkbox",
+      "id": "schedule_test_enabled",
+      "label": "Ativar prévia da programação",
+      "info": "Afeta somente o editor do tema. A loja publicada usa a data e a hora atuais.",
+      "default": false
+    },
+    {
+      "type": "text",
+      "id": "schedule_test_datetime",
+      "label": "Data e hora da prévia",
+      "info": "Formato: DD-MM-AAAA HH:MM. Exemplo: 24-08-2026 10:30.",
+      "default": "24-08-2026 10:30"
+    },
+    {
+      "type": "header",
+      "content": "Acessibilidade"
+    },
+    {
+      "type": "text",
+      "id": "accessibility_label",
+      "label": "Rótulo acessível do carrossel",
+      "default": "Banners promocionais"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "slide",
+      "name": "Slide de banner",
+      "limit": 20,
+      "settings": [
+        {
+          "type": "header",
+          "content": "Mídia"
+        },
+        {
+          "type": "select",
+          "id": "media_type",
+          "label": "Tipo de mídia",
+          "info": "Escolha imagem, vídeo hospedado na Shopify ou vídeo do YouTube/Vimeo. Adicione uma imagem de fallback sempre que possível.",
+          "options": [
+            { "value": "image", "label": "Imagem" },
+            { "value": "shopify_video", "label": "Vídeo hospedado na Shopify" },
+            { "value": "external_video", "label": "Vídeo do YouTube ou Vimeo" }
+          ],
+          "default": "image"
+        },
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Imagem desktop"
+        },
+        {
+          "type": "image_picker",
+          "id": "image_mobile",
+          "label": "Imagem mobile"
+        },
+        {
+          "type": "text",
+          "id": "image_alt",
+          "label": "Texto alternativo personalizado"
+        },
+        {
+          "type": "video",
+          "id": "video",
+          "label": "Vídeo hospedado na Shopify"
+        },
+        {
+          "type": "video_url",
+          "id": "video_url",
+          "label": "URL do YouTube ou Vimeo",
+          "accept": ["youtube", "vimeo"]
+        },
+        {
+          "type": "checkbox",
+          "id": "video_autoplay",
+          "label": "Reproduzir vídeo automaticamente",
+          "default": true
+        },
+        {
+          "type": "checkbox",
+          "id": "video_loop",
+          "label": "Repetir vídeo",
+          "default": true
+        },
+        {
+          "type": "select",
+          "id": "image_fit",
+          "label": "Ajuste da mídia",
+          "options": [
+            { "value": "cover", "label": "Preencher" },
+            { "value": "contain", "label": "Conter" }
+          ],
+          "default": "cover"
+        },
+        {
+          "type": "select",
+          "id": "image_position",
+          "label": "Ponto focal da mídia",
+          "options": [
+            { "value": "center center", "label": "Centro" },
+            { "value": "top center", "label": "Superior" },
+            { "value": "bottom center", "label": "Inferior" },
+            { "value": "center left", "label": "Esquerda" },
+            { "value": "center right", "label": "Direita" }
+          ],
+          "default": "center center"
+        },
+        {
+          "type": "range",
+          "id": "image_overlay_opacity",
+          "min": 0,
+          "max": 90,
+          "step": 5,
+          "unit": "%",
+          "label": "Opacidade da sobreposição",
+          "default": 0
+        },
+        {
+          "type": "header",
+          "content": "Programação"
+        },
+        {
+          "type": "checkbox",
+          "id": "schedule_enabled",
+          "label": "Programar um período único",
+          "info": "Usa o fuso horário selecionado. Formato: DD-MM-AAAA HH:MM.",
+          "default": false
+        },
+        {
+          "type": "text",
+          "id": "schedule_start",
+          "label": "Data e hora de início",
+          "default": "01-01-2026 00:00"
+        },
+        {
+          "type": "text",
+          "id": "schedule_end",
+          "label": "Data e hora de fim",
+          "info": "Deixe vazio para manter o slide ativo depois do início.",
+          "default": "31-12-2026 23:59"
+        },
+        {
+          "type": "checkbox",
+          "id": "recurring_enabled",
+          "label": "Ativar recorrência semanal",
+          "info": "Quando ativada, a recorrência tem prioridade sobre a programação única.",
+          "default": false
+        },
+        {
+          "type": "checkbox",
+          "id": "recurring_monday",
+          "label": "Segunda-feira",
+          "default": false
+        },
+        {
+          "type": "checkbox",
+          "id": "recurring_tuesday",
+          "label": "Terça-feira",
+          "default": false
+        },
+        {
+          "type": "checkbox",
+          "id": "recurring_wednesday",
+          "label": "Quarta-feira",
+          "default": false
+        },
+        {
+          "type": "checkbox",
+          "id": "recurring_thursday",
+          "label": "Quinta-feira",
+          "default": false
+        },
+        {
+          "type": "checkbox",
+          "id": "recurring_friday",
+          "label": "Sexta-feira",
+          "default": false
+        },
+        {
+          "type": "checkbox",
+          "id": "recurring_saturday",
+          "label": "Sábado",
+          "default": false
+        },
+        {
+          "type": "checkbox",
+          "id": "recurring_sunday",
+          "label": "Domingo",
+          "default": false
+        },
+        {
+          "type": "text",
+          "id": "recurring_start_time",
+          "label": "Horário de início da recorrência",
+          "default": "00:00"
+        },
+        {
+          "type": "text",
+          "id": "recurring_end_time",
+          "label": "Horário de fim da recorrência",
+          "info": "Use o mesmo horário para uma recorrência de dia inteiro. Um fim menor que o início continua depois da meia-noite.",
+          "default": "00:00"
+        },
+        {
+          "type": "text",
+          "id": "recurring_start_at",
+          "label": "Data e hora de início da campanha"
+        },
+        {
+          "type": "text",
+          "id": "recurring_end_at",
+          "label": "Data e hora de fim da campanha"
+        },
+        {
+          "type": "header",
+          "content": "Conteúdo"
+        },
+        {
+          "type": "text",
+          "id": "eyebrow",
+          "label": "Antetítulo"
+        },
+        {
+          "type": "inline_richtext",
+          "id": "heading",
+          "label": "Título",
+          "default": "Título do banner"
+        },
+        {
+          "type": "select",
+          "id": "heading_tag",
+          "label": "Tag HTML do título",
+          "options": [
+            { "value": "h1", "label": "H1" },
+            { "value": "h2", "label": "H2" },
+            { "value": "h3", "label": "H3" }
+          ],
+          "default": "h2"
+        },
+        {
+          "type": "select",
+          "id": "heading_size",
+          "label": "Tamanho do título",
+          "options": [
+            { "value": "small", "label": "Pequeno" },
+            { "value": "medium", "label": "Médio" },
+            { "value": "large", "label": "Grande" }
+          ],
+          "default": "medium"
+        },
+        {
+          "type": "richtext",
+          "id": "subheading",
+          "label": "Descrição"
+        },
+        {
+          "type": "url",
+          "id": "banner_link",
+          "label": "Link para toda a mídia"
+        },
+        {
+          "type": "text",
+          "id": "banner_link_label",
+          "label": "Rótulo acessível do link da mídia",
+          "default": "Abrir banner"
+        },
+        {
+          "type": "text",
+          "id": "button_label",
+          "label": "Texto do botão principal"
+        },
+        {
+          "type": "url",
+          "id": "link",
+          "label": "Link do botão principal"
+        },
+        {
+          "type": "select",
+          "id": "button_style",
+          "label": "Estilo do botão principal",
+          "options": [
+            { "value": "primary", "label": "Primário" },
+            { "value": "secondary", "label": "Secundário" },
+            { "value": "link", "label": "Link de texto" }
+          ],
+          "default": "primary"
+        },
+        {
+          "type": "text",
+          "id": "second_button_label",
+          "label": "Texto do botão secundário"
+        },
+        {
+          "type": "url",
+          "id": "second_link",
+          "label": "Link do botão secundário"
+        },
+        {
+          "type": "select",
+          "id": "second_button_style",
+          "label": "Estilo do botão secundário",
+          "options": [
+            { "value": "primary", "label": "Primário" },
+            { "value": "secondary", "label": "Secundário" },
+            { "value": "link", "label": "Link de texto" }
+          ],
+          "default": "secondary"
+        },
+        {
+          "type": "checkbox",
+          "id": "open_links_new_tab",
+          "label": "Abrir links em nova aba",
+          "default": false
+        },
+        {
+          "type": "header",
+          "content": "Layout do conteúdo"
+        },
+        {
+          "type": "checkbox",
+          "id": "show_text_box",
+          "label": "Exibir fundo do conteúdo",
+          "default": true
+        },
+        {
+          "type": "select",
+          "id": "box_align",
+          "label": "Posição do conteúdo",
+          "options": [
+            { "value": "top-left", "label": "Superior esquerdo" },
+            { "value": "top-center", "label": "Superior central" },
+            { "value": "top-right", "label": "Superior direito" },
+            { "value": "middle-left", "label": "Meio esquerdo" },
+            { "value": "middle-center", "label": "Meio central" },
+            { "value": "middle-right", "label": "Meio direito" },
+            { "value": "bottom-left", "label": "Inferior esquerdo" },
+            { "value": "bottom-center", "label": "Inferior central" },
+            { "value": "bottom-right", "label": "Inferior direito" }
+          ],
+          "default": "middle-center"
+        },
+        {
+          "type": "color",
+          "id": "content_text_color",
+          "label": "Cor do texto do conteúdo",
+          "default": "#111111"
+        },
+        {
+          "type": "color",
+          "id": "content_background_color",
+          "label": "Cor de fundo do conteúdo",
+          "default": "#ffffff"
+        },
+        {
+          "type": "range",
+          "id": "content_radius",
+          "min": 0,
+          "max": 40,
+          "step": 2,
+          "unit": "px",
+          "label": "Arredondamento do conteúdo",
+          "default": 0
+        },
+        {
+          "type": "color",
+          "id": "button_color",
+          "label": "Cor do botão",
+          "default": "#111111"
+        },
+        {
+          "type": "color",
+          "id": "button_text_color",
+          "label": "Cor do texto do botão",
+          "default": "#ffffff"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Banner reutilizável",
+      "blocks": [
+        { "type": "slide" },
+        { "type": "slide" }
+      ]
+    }
+  ]
+}
+{% endschema %}
+
+
