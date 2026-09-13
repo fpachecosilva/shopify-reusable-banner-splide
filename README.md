@@ -1,4 +1,4 @@
-# Carrossel de banners reutilizável com Splide
+# Carrossel de banners recorrentes com Splide
 
 Versão do componente de banners preparada para temas Shopify Online Store 2.0 que já utilizam Splide. A biblioteca fica dentro de `assets`, então o componente funciona sem CDN e sem depender da versão carregada por outro tema.
 
@@ -20,8 +20,7 @@ Depois adicione **Carrossel de banners** pelo editor visual. A seção já carre
 
 ## Recursos
 
-É a mesma configuração da versão nativa: imagens desktop/mobile, vídeos Shopify/YouTube/Vimeo, link de mídia, dois botões, posicionamento, cores, alturas, fade/slide, autoplay, navegação, acessibilidade e agendamento pontual ou recorrente.
-
+Agendamento pontual ou recorrente. Imagens desktop/mobile, vídeos Shopify/YouTube/Vimeo, link de mídia, dois botões, posicionamento, cores, alturas, fade/slide, autoplay, navegação, acessibilidade.
 O script remove temporariamente da lista do Splide os slides que não estão ativos. Quando a programação muda, ele recria a instância e mantém somente os slides válidos, inclusive em recorrências que atravessam a meia-noite.
 
 ## Fallback
